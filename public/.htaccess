@@ -1,0 +1,67 @@
+# Apache / cPanel rules for https://rcpunecitylegends.org (static export, one folder per page: /events/index.html).
+# Upload this file to the ROOT of public_html (it is already inside godaddy-public_html.zip).
+
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 0. Never touch certificate-validation requests (cPanel AutoSSL / Let's Encrypt use /.well-known/)
+RewriteRule ^\.well-known/ - [L]
+
+# 1a. www -> non-www (keeps https; one hop to the canonical address)
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteRule ^ https://rcpunecitylegends.org%{REQUEST_URI} [L,R=301]
+
+# 1b. http -> https on the canonical host (also honours X-Forwarded-Proto for hosts that sit behind a proxy)
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+RewriteRule ^ https://rcpunecitylegends.org%{REQUEST_URI} [L,R=301]
+
+# 2. /index.html -> / and /events/index.html -> /events/
+RewriteCond %{THE_REQUEST} \s/+(.*?)index\.html[\s?] [NC]
+RewriteRule ^ /%1 [L,R=301]
+
+# 3. Clean URLs: /events and /team/some-slug (no .html). Folder URLs get their trailing slash from Apache
+#    (DirectorySlash, 301 to /events/), which is the form the site, canonical tags and sitemap use.
+#    If a flat file such as /something.html exists it is served for /something as well.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+?)/?$ /$1.html [L]
+</IfModule>
+
+# Anything that matches no file or folder gets the site's own 404 page (ErrorDocument above), with a real 404 status.
+
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+# Hashed build files never change: cache for a year. Pages are always re-checked so updates show up at once.
+<FilesMatch "\.(html)$">
+  Header set Cache-Control "no-cache"
+</FilesMatch>
+# (LiteSpeed/Hostinger does not support <If>, so hashed build files are matched by extension instead.)
+<FilesMatch "\.(js|css)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+<FilesMatch "\.(webp|png|jpe?g|ico|woff2?)$">
+  Header set Cache-Control "public, max-age=2592000"
+</FilesMatch>
+</IfModule>
+
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json application/xml text/xml image/svg+xml text/plain
+</IfModule>
+
+<IfModule mod_mime.c>
+AddType application/manifest+json .webmanifest
+</IfModule>
+
+# Hide dotfiles (but not .well-known)
+<FilesMatch "^\.(?!well-known)">
+  Require all denied
+</FilesMatch>

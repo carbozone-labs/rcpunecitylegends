@@ -1,0 +1,4 @@
+import { OperationsManager } from "./OperationsManager";
+type Module = "events" | "attendance" | "tasks" | "documents" | "announcements";
+const titles: Record<Module,string> = { events: "Event management", attendance: "Attendance management", tasks: "Task management", documents: "Document management", announcements: "Announcement management" };
+export function AdminOperationsPage({ module }: { module: Module }) { return <div className="space-y-5"><header><p className="text-xs font-bold uppercase tracking-[.22em] text-amber-300">Administration · Office bearers only</p><h2 className="mt-2 font-display text-3xl text-white">{titles[module]}</h2><p className="mt-2 text-sm text-slate-400">Administrative controls are available only in this separate portal.</p></header><OperationsManager module={module}/></div>; }

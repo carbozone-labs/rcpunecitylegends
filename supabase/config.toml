@@ -1,0 +1,14 @@
+# Supabase project configuration for the RC Pune City Legends enquiry system.
+# `project_id` is only a local label (used by the Supabase CLI for local containers). It is NOT your hosted project's
+# reference ID and is not a secret. You link the hosted project with: supabase link --project-ref <your-project-ref>
+project_id = "rc-pune-city-legends"
+
+# The enquiry form is public (visitors are not signed in), so the platform's JWT check is switched off for this one
+# function. Protection comes from the function itself: strict allowed-origins (CORS), server-side validation,
+# honeypot + timing checks, per-IP / per-email / global rate limits, and a request size limit.
+[functions.submit-enquiry]
+verify_jwt = false
+
+# Invitation provisioning is privileged and must always validate a Supabase user JWT.
+[functions.invite-member]
+verify_jwt = true

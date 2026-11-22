@@ -1,0 +1,33 @@
+node_modules
+.next
+out
+.env
+.env*.local
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# Environment files and secrets (keep .env.example, which has no values)
+.env.local
+.env.*.local
+.env.development
+.env.production
+supabase/.temp
+supabase/.branches
+supabase/functions/.env
+supabase/.env
+*.secret
+*.pem
+
+# Local BOD credential spreadsheets (never commit roster passwords)
+*BOD*.csv
+*Gmail*.csv
+*credentials*.csv
+*BOD*.xlsx
+*Gmail*.xlsx
+16-row roster/
+
+# Internal photo archives and unreviewed selections are not part of the website build
+archive/
+review-needed/

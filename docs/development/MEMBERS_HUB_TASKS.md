@@ -1,0 +1,3 @@
+# Tasks
+
+Tasks, assignments, submissions and status history are stored separately. Assignees can read assigned tasks and submit their own work. Task managers (admin/super_admin or explicit `tasks.manage`) create tasks, assign members and review submissions. Database triggers update task status, append status history and create notifications when work is submitted or reviewed. Optional supporting attachments are enabled in the private `members-task-submissions` bucket (10 MB maximum, PDF/JPEG/PNG/DOCX/XLSX allowlist). Object paths are scoped to the submitting member and assigned task; task managers can read attachments for review.
