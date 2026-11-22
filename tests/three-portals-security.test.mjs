@@ -56,7 +56,8 @@ test('static export configuration remains enabled', () => {
 test('administrative operations are available only in the Administration Portal', () => {
   assert.match(operationsManager, /const allowed=isAdmin/);
   assert.doesNotMatch(operationsView, /OperationsManager/);
-  assert.match(operationsManager, /details open=\{module==="events"\}/);
+  assert.match(operationsManager, /<details open className=/);
+  assert.doesNotMatch(operationsManager, /open=\{module==="events"\}/);
   for (const route of ['events','attendance','tasks','documents','announcements']) {
     assert.ok(fs.existsSync(new URL(`../src/app/board-admin/operations/${route}/page.tsx`, import.meta.url)));
   }

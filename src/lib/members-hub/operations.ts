@@ -1,10 +1,16 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any -- Supabase row payloads are currently generated dynamically; replace with Database types in a follow-up. */
 import { adminAuthClient, authClient, type BrowserAuthClient } from "@/lib/supabase/browser";
 export type EventRow={id:string;title:string;slug:string;description:string;image_url:string|null;category:string;starts_at:string;ends_at:string;venue:string|null;location:string|null;registration_deadline:string|null;capacity:number|null;status:string};
+export type NewEvent=Omit<EventRow,"id">&{created_by:string};
 export type TaskRow={id:string;title:string;description:string;priority:string;due_at:string|null;status:string;created_at:string};
 export type DirectoryRow={full_name:string;profile_photo_url:string|null;designation:string|null;committee:string|null;skills:string[];bio:string|null};
 export type AnnouncementRow={id:string;title:string;message:string;category:string;priority:string;published_at:string|null;expires_at:string|null};
 export type DocumentRow={id:string;title:string;description:string;category:string;storage_path:string;mime_type:string;file_size:number;audience:string;created_at:string};
+export function normalizeEventTitle(title:string){
+ const normalized=title.trim();
+ if(normalized.length<3||normalized.length>180)throw new Error("Event title must be between 3 and 180 characters.");
+ return normalized;
+}
 const createOperations=(client:BrowserAuthClient)=>{
 const get=(table:string,query:string)=>client.data<any[]>(`/rest/v1/${table}?${query}`);
 const post=(table:string,body:unknown,prefer="return=representation")=>client.data<any[]>(`/rest/v1/${table}`,{method:"POST",headers:{Prefer:prefer},body:JSON.stringify(body)});
@@ -24,7 +30,7 @@ return {
  markRead:(id:string)=>patch("notifications",`id=eq.${encodeURIComponent(id)}`,{read_at:new Date().toISOString()}),
  documents:()=>get("documents","select=id,title,description,category,storage_path,mime_type,file_size,audience,created_at&order=created_at.desc"),
  permissions:()=>get("member_permissions","select=permission"),
- createEvent:(value:unknown)=>post("events",value),
+ createEvent:(value:NewEvent)=>post("events",{...value,title:normalizeEventTitle(value.title)}),
  createSession:(value:unknown)=>post("attendance_sessions",value),
  markAttendance:(session_id:string,user_id:string,attendance_status:string,reason:string)=>client.data<void>("/rest/v1/rpc/mark_attendance",{method:"POST",body:JSON.stringify({target_session:session_id,target_user:user_id,new_status:attendance_status,change_reason:reason})}),
  createTaskWithAssignment:(value:{task_title:string;task_description:string;task_priority:string;task_due_at:string|null;target_user:string})=>client.data<string>("/rest/v1/rpc/create_task_with_assignment",{method:"POST",body:JSON.stringify(value)}),

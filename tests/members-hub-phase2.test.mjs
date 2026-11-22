@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 const migration=readFileSync(new URL('../supabase/migrations/20261122000000_members_hub_phase2_operations.sql',import.meta.url),'utf8');
 const shell=readFileSync(new URL('../src/components/members-hub/MemberShell.tsx',import.meta.url),'utf8');
+const operationsManager=readFileSync(new URL('../src/components/members-hub/OperationsManager.tsx',import.meta.url),'utf8');
 const operations=readFileSync(new URL('../src/lib/members-hub/operations.ts',import.meta.url),'utf8');
 const edge=readFileSync(new URL('../supabase/functions/invite-member/index.ts',import.meta.url),'utf8');
 test('Phase 2 creates the operational schema with RLS enabled',()=>{
@@ -15,6 +16,16 @@ test('event capacity and registration operations are database-atomic',()=>{
  assert.match(migration,/registration_deadline/);
  assert.match(migration,/e\.status <> 'published'/);
  assert.match(migration,/function public\.register_for_event/);
+});
+test('admin-published upcoming events are the same records listed for members',()=>{
+ assert.match(operations,/events:\(\)=>get\("events",`select=\*&status=eq\.published&starts_at=gte\./);
+ assert.match(operationsManager,/status:"published"/);
+ assert.match(migration,/create policy "Members view published events"/);
+});
+test('event creation rejects titles outside the database constraint before inserting',()=>{
+ assert.match(migration,/char_length\(title\) between 3 and 180/);
+ assert.match(operations,/normalizeEventTitle\(value\.title\)/);
+ assert.match(operations,/Event title must be between 3 and 180 characters/);
 });
 test('attendance marking requires operational permission and writes audit',()=>{
  assert.match(migration,/function public\.mark_attendance/);
